@@ -6,17 +6,26 @@ Because `Index of /` was never meant to be private.
 
 ## 🔧 Features
 
+
 - ✅ Collects and stores web content from Elasticsearch.
+  
 - 🧠 Trains classifiers (Logistic Regression) using `scikit-learn`.
+  
 - 📊 Evaluates model performance with rich classification reports.
+  
 - ❌ Detects and reports false positives and false negatives.
+  
 - 📁 Supports both minimal (`min`) and raw (`raw`) web content versions.
+  
 - 🌐 Outputs HTML reports for easy review of misclassified URLs.
+  
 - 🐍 Built with Python 3, Pandas, Scikit-learn, and Elasticsearch Python client.
+  
 
 ---
 
 ## 📁 Project Structure
+
 
 ```
 ELKOfIndex/
