@@ -18,6 +18,7 @@ Because `Index of /` was never meant to be private.
 
 ## 📁 Project Structure
 
+```
 ELKOfIndex/
 │
 ├── data/
@@ -36,7 +37,7 @@ ELKOfIndex/
 ├── config.py # Configuration for Elasticsearch
 ├── requirements.txt # Dependencies
 └── README.md # You're here!
-
+```
 
 ---
 
@@ -51,6 +52,7 @@ pip install -r requirements.txt
 ```
 
 ### 2. Configure Elasticsearch
+
 Set your Elasticsearch parameters in config.py:
 
 ```
@@ -106,7 +108,9 @@ Print classification metrics.
 
 Generate misclassified.html with lists of false positives and negatives.
 
+
 📊 HTML Report
+
 The generated misclassified.html includes clickable links to:
 
 False Positives (predicted open dir but it's not)
@@ -115,6 +119,7 @@ False Negatives (missed actual open dirs)
 
 It distinguishes between models trained on min and raw content.
 
+
 📌 Notes
 The script handles URLs with commas and other special characters safely via CSV quoting.
 
@@ -122,6 +127,8 @@ Easily extensible to support more classifiers or web content preprocessing strat
 
 Designed for batch processing large-scale crawled data via Elasticsearch crawling2elk project.
 
+
 👨‍💻 Author
+
 Made with ❤️ by Rafael — Cybersecurity & ML Enthusiast
 
