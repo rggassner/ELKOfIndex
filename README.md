@@ -118,7 +118,9 @@ Print classification metrics.
 Generate misclassified.html with lists of false positives and negatives.
 
 
+
 📊 HTML Report
+
 
 The generated misclassified.html includes clickable links to:
 
@@ -129,7 +131,10 @@ False Negatives (missed actual open dirs)
 It distinguishes between models trained on min and raw content.
 
 
+
 📌 Notes
+
+
 The script handles URLs with commas and other special characters safely via CSV quoting.
 
 Easily extensible to support more classifiers or web content preprocessing strategies.
@@ -137,7 +142,9 @@ Easily extensible to support more classifiers or web content preprocessing strat
 Designed for batch processing large-scale crawled data via Elasticsearch crawling2elk project.
 
 
+
 👨‍💻 Author
+
 
 Made with ❤️ by Rafael — Cybersecurity & ML Enthusiast
 
