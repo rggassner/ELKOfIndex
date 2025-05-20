@@ -139,7 +139,7 @@ The script handles URLs with commas and other special characters safely via CSV 
 
 Easily extensible to support more classifiers or web content preprocessing strategies.
 
-Designed for batch processing large-scale crawled data via Elasticsearch crawling2elk project.
+Designed for batch processing large-scale crawled data via Elasticsearch [crawling2elk](https://github.com/rggassner/crawling2elk) project.
 
 
 
