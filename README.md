@@ -2,29 +2,33 @@
 
 Because `Index of /` was never meant to be private.
 
+
 **ELKOfIndex** is a machine learning-powered tool for identifying open directories on the web using data stored in Elasticsearch. It combines the capabilities of the ELK stack with supervised learning to train, evaluate, and classify web content as open directories or not. It includes support for minimal and raw web content, HTML export of misclassifications, and modular design for extensibility.
 
-## 🔧 Features
+The solution uses a combination of `HashingVectorizer` and `SGDClassifier` from scikit-learn, optimized for performance across various text representations and parameter configurations. It supports batch training to handle large datasets with minimal memory usage and is designed for reproducibility and portability.
 
 
-- ✅ Collects and stores web content from Elasticsearch.
+##  Features
+
+
+-  Collects and stores web content from Elasticsearch.
   
-- 🧠 Trains classifiers (Logistic Regression) using `scikit-learn`.
+-  Trains classifiers (Logistic Regression) using `scikit-learn`.
   
-- 📊 Evaluates model performance with rich classification reports.
+-  Evaluates model performance with rich classification reports.
   
-- ❌ Detects and reports false positives and false negatives.
+-  Detects and reports false positives and false negatives.
   
-- 📁 Supports both minimal (`min`) and raw (`raw`) web content versions.
+-  Supports both minimal (`min`) and raw (`raw`) web content versions.
   
-- 🌐 Outputs HTML reports for easy review of misclassified URLs.
+-  Outputs HTML reports for easy review of misclassified URLs.
   
-- 🐍 Built with Python 3, Pandas, Scikit-learn, and Elasticsearch Python client.
+-  Built with Python 3, Pandas, Scikit-learn, and Elasticsearch Python client.
   
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 
 ```
@@ -50,7 +54,7 @@ ELKOfIndex/
 
 ---
 
-## 🚀 Usage
+##  Usage
 
 ### 1. Install Dependencies
 
@@ -120,7 +124,7 @@ Generate misclassified.html with lists of false positives and negatives.
 
 
 
-📊 HTML Report
+HTML Report
 
 
 The generated misclassified.html includes clickable links to:
@@ -132,8 +136,81 @@ False Negatives (missed actual open dirs)
 It distinguishes between models trained on min and raw content.
 
 
+---
 
-📌 Notes
+## Classification Task
+
+The model predicts whether an HTML page is an "open directory" based on textual features.
+
+- **Target:** Binary classification
+  - `0` = Not an open directory
+  - `1` = Open directory
+- **Input:** HTML content as plain text
+
+---
+
+## Training Pipeline
+
+- Vectorization: `HashingVectorizer`
+  - Avoids vocabulary storage (privacy-safe)
+  - Fixed memory usage regardless of dataset size
+  - Configurable `ngram_range` and `n_features`
+
+- Classifier: `SGDClassifier` with `log_loss`
+  - Supports `partial_fit` for batch training
+  - Balanced class weights computed manually
+
+- Training:
+  - Batches of 10,000 HTML documents
+  - Early filtering of empty or non-existent files
+  - Evaluation on 10% validation sample per model
+
+---
+
+## Hyperparameter Tuning
+
+We explored combinations of:
+
+| Parameter     | Values Tested                   |
+|---------------|---------------------------------|
+| `ngram_range` | `(1, 1)`, `(1, 2)`               |
+| `n_features`  | `2^16`, `2^17`, `2^18`, `2^19`, `2^20` |
+| `content_type`| `min` (clean HTML), `raw` (original HTML) |
+
+**Total trained models:** 20
+
+---
+
+## Summary of Results (Top Models)
+
+| Content Type | N-gram Range | Features | F1 Score | Precision (class=1) | Recall (class=1) | Model Path |
+|--------------|--------------|----------|----------|----------------------|------------------|------------|
+| `min`        | (1, 2)       | 65,536   | **0.9801** | 0.9667               | 0.9940           | `model/open_dir_classifier_min_ngram_1_2_nfeat_16.pkl` |
+| `min`        | (1, 2)       | 131,072  | 0.9799   | 0.9663               | 0.9940           | ...        |
+| `raw`        | (1, 2)       | 262,144  | 0.9736   | 0.9540               | 0.9940           | ...        |
+| `min`        | (1, 1)       | 262,144  | 0.9774   | 0.9614               | 0.9940           | ...        |
+
+### Best Model (Overall)
+
+- **Content Type**: `min`
+- **n-gram range**: `(1, 2)`
+- **Hashing dimensions**: `2^16 = 65,536`
+- **F1 Score**: `0.9801`
+- **Precision (class=1)**: `0.9667`
+- **Recall (class=1)**: `0.9940`
+
+---
+
+## Privacy Considerations
+
+This project uses `HashingVectorizer` instead of `TfidfVectorizer` to:
+- Prevent the model from storing or exposing original terms from the training data
+- Make the saved models **safe for public sharing or deployment**
+
+---
+
+
+Notes
 
 
 The script handles URLs with commas and other special characters safely via CSV quoting.
@@ -144,7 +221,7 @@ Designed for batch processing large-scale crawled data via Elasticsearch [crawli
 
 
 
-👨‍💻 Author
+Author
 
 
 Made with ❤️ by Rafael — Cybersecurity & ML Enthusiast
