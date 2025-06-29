@@ -5,11 +5,13 @@ from sklearn.metrics import classification_report
 import joblib
 import html
 import re
+import gc
 
 # --- Config ---
 TEST_CSV = "data/evaluation.csv"
 HTML_REPORT_PATH = "misclassified.html"
 MODEL_DIR = Path("model")
+BATCH_SIZE = 1000
 
 # --- Load and Prepare Base Data ---
 df_base = pd.read_csv(TEST_CSV)
@@ -47,38 +49,62 @@ for model_file in sorted(MODEL_DIR.glob("open_dir_classifier_*.pkl")):
         continue
 
     content_type = match.group(1)
-    print(f"\n🚀 Evaluating model: {model_file.name} for content type: {content_type}")
+    print(f"\n Evaluating model: {model_file.name} for content type: {content_type}")
 
     html_dir = Path(f"data/{content_type}_webcontent")
 
     # Load model
     vectorizer, model = joblib.load(model_file)
 
-    # Prepare dataframe
+    # Prepare evaluation set
     df = df_base.copy()
     df['html_path'] = df['id'].apply(lambda x: html_dir / x)
     df = df[df['html_path'].apply(lambda p: p.exists())].copy()
-    df['text'] = df['html_path'].apply(safe_read_text)
-    df = df[df['text'].str.strip().astype(bool)]
+    df = df.reset_index(drop=True)
 
-    # Predict
-    X = vectorizer.transform(df['text'])
-    y_true = df['isopendir']
-    y_pred = model.predict(X)
-    df['predicted'] = y_pred
+    y_true_all = []
+    y_pred_all = []
+    misclassified_fp = []
+    misclassified_fn = []
 
-    print(classification_report(y_true, y_pred))
+    # Evaluate in batches
+    for i in range(0, len(df), BATCH_SIZE):
+        batch = df.iloc[i:i + BATCH_SIZE].copy()
+        batch['text'] = batch['html_path'].apply(safe_read_text)
+        batch = batch[batch['text'].str.strip().astype(bool)]
+        if batch.empty:
+            continue
 
-    # Misclassifications
-    false_positives = df[(df['isopendir'] == False) & (df['predicted'] == True)]
-    false_negatives = df[(df['isopendir'] == True) & (df['predicted'] == False)]
+        X = vectorizer.transform(batch['text'])
+        y_true = batch['isopendir'].astype(int).values
+        y_pred = model.predict(X)
 
-    print(f"❌ False Positives: {len(false_positives)}")
-    print(f"❌ False Negatives: {len(false_negatives)}")
+        y_true_all.extend(y_true)
+        y_pred_all.extend(y_pred)
+
+        batch['predicted'] = y_pred
+        misclassified_fp.append(batch[(batch['isopendir'] == False) & (batch['predicted'] == True)])
+        misclassified_fn.append(batch[(batch['isopendir'] == True) & (batch['predicted'] == False)])
+
+        del batch, X, y_true, y_pred
+        gc.collect()
+
+    # Full evaluation metrics
+    print(classification_report(y_true_all, y_pred_all))
+
+    # Combine misclassified DataFrames
+    false_positives = pd.concat(misclassified_fp, ignore_index=True)
+    false_negatives = pd.concat(misclassified_fn, ignore_index=True)
+
+    print(f" False Positives: {len(false_positives)}")
+    print(f" False Negatives: {len(false_negatives)}")
 
     # Append to HTML report
     report_sections.append(generate_html_table(false_positives, f"{model_file.name} - False Positives (Predicted Open Dir, but it's NOT)"))
     report_sections.append(generate_html_table(false_negatives, f"{model_file.name} - False Negatives (Missed Real Open Dir)"))
+
+    del false_positives, false_negatives
+    gc.collect()
 
 # --- Final HTML ---
 html_content = f"""
@@ -97,4 +123,4 @@ html_content = f"""
 with open(HTML_REPORT_PATH, "w", encoding="utf-8") as f:
     f.write(html_content)
 
-print(f"\n💾 HTML report saved to {HTML_REPORT_PATH}")
+print(f"\n HTML report saved to {HTML_REPORT_PATH}")
