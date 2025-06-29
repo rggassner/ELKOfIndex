@@ -135,6 +135,23 @@ False Negatives (missed actual open dirs)
 
 It distinguishes between models trained on min and raw content.
 
+If you want to manually update isopendir variable you could use the following script in kibana.
+
+```
+POST crawler/_update_by_query
+{
+  "script": {
+    "source": "ctx._source.isopendir = true",
+    "lang": "painless"
+  },
+  "query": {
+    "term": {
+      "url": "https://youropendir.com"
+    }
+  }
+}
+```
+
 
 ---
 
